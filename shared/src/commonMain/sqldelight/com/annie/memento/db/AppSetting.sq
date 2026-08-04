@@ -1,0 +1,13 @@
+-- global user settings
+CREATE TABLE app_setting (
+    key TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+selectAll:
+SELECT key, value
+FROM app_setting;
+
+upsert:
+INSERT OR REPLACE INTO app_setting(key, value)
+VALUES (?, ?);

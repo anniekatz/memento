@@ -1,0 +1,52 @@
+CREATE TABLE deck (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    frontName TEXT NOT NULL,
+    backName TEXT NOT NULL,
+    isHierarchical INTEGER NOT NULL,
+    description TEXT,
+    photoPaths TEXT,
+    isSrs INTEGER NOT NULL DEFAULT 0,
+    newCardsPerDay INTEGER NOT NULL DEFAULT 15
+);
+
+insertDeck:
+INSERT INTO deck(name, frontName, backName, isHierarchical, description, photoPaths, isSrs, newCardsPerDay)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+lastInsertRowId:
+SELECT last_insert_rowid();
+
+selectDeck:
+SELECT *
+FROM deck
+WHERE id = ?;
+
+selectDeckSummaries:
+SELECT
+    deck.id,
+    deck.name,
+    deck.frontName,
+    deck.backName,
+    deck.isHierarchical,
+    deck.description,
+    deck.photoPaths,
+    deck.isSrs,
+    deck.newCardsPerDay,
+    (SELECT COUNT(*) FROM card WHERE card.deckId = deck.id) AS cardCount,
+    (SELECT COUNT(*) FROM tag WHERE tag.deckId = deck.id) AS tagCount,
+    (SELECT COUNT(*) FROM deckLevel WHERE deckLevel.deckId = deck.id) AS levelCount,
+    (SELECT COUNT(*) FROM card WHERE card.deckId = deck.id AND card.seen = 0) AS unseenCount,
+    (SELECT COUNT(*) FROM card WHERE card.deckId = deck.id AND card.seenDay = :today) AS learnedTodayCount,
+    (SELECT COUNT(*) FROM card WHERE card.deckId = deck.id AND card.seen = 1 AND card.mastery < 15 AND card.nextReviewDay IS NOT NULL AND card.nextReviewDay <= :today) AS dueCount
+FROM deck
+ORDER BY deck.id DESC;
+
+updateDeck:
+UPDATE deck
+SET name = ?, frontName = ?, backName = ?, isHierarchical = ?, description = ?, photoPaths = ?, isSrs = ?, newCardsPerDay = ?
+WHERE id = ?;
+
+deleteDeck:
+DELETE FROM deck
+WHERE id = ?;
