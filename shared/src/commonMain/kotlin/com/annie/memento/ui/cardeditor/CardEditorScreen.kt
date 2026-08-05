@@ -38,9 +38,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.annie.memento.di.LocalAppGraph
+import com.annie.memento.di.LocalAppSettings
+import com.annie.memento.model.CardTextOverride
 import com.annie.memento.model.DeckDetails
 import com.annie.memento.model.MAX_MASTERY
 import com.annie.memento.model.SideInput
+import com.annie.memento.model.cardTextFor
 import com.annie.memento.platform.todayEpochDay
 import com.annie.memento.ui.components.AudioListEditor
 import com.annie.memento.ui.components.ColoredChip
@@ -56,7 +59,9 @@ import com.annie.memento.ui.components.dismissKeyboardGestures
 import com.annie.memento.ui.components.toInputs
 import com.annie.memento.ui.richtext.RichText
 import com.annie.memento.ui.theme.InsetShape
+import com.annie.memento.ui.theme.scaledBy
 import com.annie.memento.ui.theme.toColor
+import com.annie.memento.ui.theme.withCardFont
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -220,6 +225,7 @@ fun CardEditorScreen(deckId: Long, cardId: Long?, onClose: () -> Unit) {
                 rich = richA,
                 onRich = { richA = it },
                 textError = showErrors && textA.isBlank(),
+                textOverride = deck.frontTextOverride,
             )
             SideEditor(
                 sideName = deck.backName,
@@ -236,6 +242,7 @@ fun CardEditorScreen(deckId: Long, cardId: Long?, onClose: () -> Unit) {
                 rich = richB,
                 onRich = { richB = it },
                 textError = showErrors && textB.isBlank(),
+                textOverride = deck.backTextOverride,
             )
 
             if (deck.isHierarchical && current.levels.isNotEmpty()) {
@@ -376,6 +383,7 @@ private fun SideEditor(
     rich: Boolean,
     onRich: (Boolean) -> Unit,
     textError: Boolean,
+    textOverride: CardTextOverride?,
 ) {
     // main text, examples, notes, audio, photos
     SectionCard(Modifier.fillMaxWidth()) {
@@ -423,14 +431,15 @@ private fun SideEditor(
                 AudioListEditor(audios, onAudios, modifier = Modifier.weight(1f))
                 ImageListEditor(images, onImages, modifier = Modifier.weight(1f))
             }
-            if (rich) SidePreview(text = text, examples = examples, notes = notes)
+            if (rich) SidePreview(text = text, examples = examples, notes = notes, textOverride = textOverride)
         }
     }
 }
 
 //live render rich text
 @Composable
-private fun SidePreview(text: String, examples: List<String>, notes: String) {
+private fun SidePreview(text: String, examples: List<String>, notes: String, textOverride: CardTextOverride?) {
+    val textSettings = LocalAppSettings.current.cardTextFor(textOverride)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SectionHeader("Preview", accent = MaterialTheme.colorScheme.primary)
         Surface(
@@ -447,14 +456,18 @@ private fun SidePreview(text: String, examples: List<String>, notes: String) {
                 RichText(
                     markup = text.ifBlank { "—" },
                     rich = true,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineSmall
+                        .scaledBy(textSettings.mainTextScale)
+                        .withCardFont(textSettings.font, textSettings.fontWeight),
                     textAlign = TextAlign.Center,
                 )
                 examples.filter { it.isNotBlank() }.takeIf { it.isNotEmpty() }?.let { ex ->
                     RichText(
                         markup = ex.joinToString("\n") { "• $it" },
                         rich = true,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium
+                            .scaledBy(textSettings.examplesScale)
+                            .withCardFont(textSettings.font, null),
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -463,7 +476,9 @@ private fun SidePreview(text: String, examples: List<String>, notes: String) {
                     RichText(
                         markup = note,
                         rich = true,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium
+                            .scaledBy(textSettings.notesScale)
+                            .withCardFont(textSettings.font, null),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth(),
                     )

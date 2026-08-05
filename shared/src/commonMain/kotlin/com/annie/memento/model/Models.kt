@@ -11,6 +11,9 @@ data class Deck(
     val isHierarchical: Boolean,
     val isSrs: Boolean = false,
     val newCardsPerDay: Int = DEFAULT_NEW_CARDS_PER_DAY,
+    // per-side card text settings; null = follow global
+    val frontTextOverride: CardTextOverride? = null,
+    val backTextOverride: CardTextOverride? = null,
 ) {
     val hasPhoto: Boolean get() = photoPath != null
 }

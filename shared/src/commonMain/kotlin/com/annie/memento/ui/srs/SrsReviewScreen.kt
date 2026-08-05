@@ -217,6 +217,8 @@ fun SrsReviewScreen(navigator: Navigator, deckId: Long) {
                             backName = backName,
                             onToggle = { if (shown.key == shownKey) flipStates[shownKey] = flipStates[shownKey] != true },
                             modifier = Modifier.fillMaxSize(),
+                            frontTextOverride = if (startWithA) current.deck.frontTextOverride else current.deck.backTextOverride,
+                            backTextOverride = if (startWithA) current.deck.backTextOverride else current.deck.frontTextOverride,
                         )
                     }
                 }

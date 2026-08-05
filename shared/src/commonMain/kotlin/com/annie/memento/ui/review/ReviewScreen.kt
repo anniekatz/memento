@@ -330,6 +330,8 @@ private fun ReviewSession(
                 backName = backName,
                 onToggle = { flipStates[cardIndex] = !isFlipped(cardIndex) },
                 modifier = Modifier.fillMaxSize(),
+                frontTextOverride = if (startWithA) details.deck.frontTextOverride else details.deck.backTextOverride,
+                backTextOverride = if (startWithA) details.deck.backTextOverride else details.deck.frontTextOverride,
             )
         }
 

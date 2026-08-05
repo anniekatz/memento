@@ -7,6 +7,7 @@ import com.annie.memento.db.MementoDatabase
 import com.annie.memento.db.SelectDeckSummaries
 import com.annie.memento.model.Card
 import com.annie.memento.model.CardSide
+import com.annie.memento.model.CardTextOverride
 import com.annie.memento.model.DEFAULT_NEW_CARDS_PER_DAY
 import com.annie.memento.model.Deck
 import com.annie.memento.model.DeckDetails
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import com.annie.memento.db.Card as DbCard
 import com.annie.memento.db.Deck as DbDeck
 import com.annie.memento.db.DeckLevel as DbDeckLevel
@@ -84,10 +86,15 @@ class MementoRepository(
         tags: List<TagDraft>,
         isSrs: Boolean = false,
         newCardsPerDay: Int = DEFAULT_NEW_CARDS_PER_DAY,
+        frontTextOverride: CardTextOverride? = null,
+        backTextOverride: CardTextOverride? = null,
     ): Long = withContext(dispatcher) {
         val photoName = resolve(photo)
         db.transactionWithResult {
-            deckQ.insertDeck(name, frontName, backName, isHierarchical.toDb(), description, photoName, isSrs.toDb(), newCardsPerDay.toLong())
+            deckQ.insertDeck(
+                name, frontName, backName, isHierarchical.toDb(), description, photoName, isSrs.toDb(), newCardsPerDay.toLong(),
+                encodeTextOverride(frontTextOverride), encodeTextOverride(backTextOverride),
+            )
             val deckId = deckQ.lastInsertRowId().executeAsOne()
             levels.forEach { levelQ.insertLevel(deckId, it.position.toLong(), it.name, it.color) }
             tags.forEach { tagQ.insertTag(deckId, it.name, it.color) }
@@ -107,12 +114,17 @@ class MementoRepository(
         tags: List<TagDraft>,
         isSrs: Boolean = false,
         newCardsPerDay: Int = DEFAULT_NEW_CARDS_PER_DAY,
+        frontTextOverride: CardTextOverride? = null,
+        backTextOverride: CardTextOverride? = null,
     ) = withContext(dispatcher) {
         // one photo per deck
         val oldPhotos = deckQ.selectDeck(deckId).executeAsOneOrNull()?.let { decodePaths(it.photoPaths) }.orEmpty()
         val newPhoto = resolve(photo)
         db.transaction {
-            deckQ.updateDeck(name, frontName, backName, isHierarchical.toDb(), description, newPhoto, isSrs.toDb(), newCardsPerDay.toLong(), deckId)
+            deckQ.updateDeck(
+                name, frontName, backName, isHierarchical.toDb(), description, newPhoto, isSrs.toDb(), newCardsPerDay.toLong(),
+                encodeTextOverride(frontTextOverride), encodeTextOverride(backTextOverride), deckId,
+            )
 
             // tags
             val existingTagIds = tagQ.selectTagsByDeck(deckId).executeAsList().map { it.id }.toSet()
@@ -162,6 +174,8 @@ class MementoRepository(
                     spec.photoPath,
                     spec.isSrs.toDb(),
                     spec.newCardsPerDay.toLong(),
+                    frontTextStyle = null,
+                    backTextStyle = null,
                 )
                 val deckId = deckQ.lastInsertRowId().executeAsOne()
                 spec.levels.forEach { levelQ.insertLevel(deckId, it.position.toLong(), it.name, it.color) }
@@ -396,6 +410,17 @@ private fun encodeExamples(examples: List<String>): String? =
 private fun decodeExamples(stored: String?): List<String> =
     stored?.split(EXAMPLE_SEPARATOR)?.filter { it.isNotEmpty() }.orEmpty()
 
+// deck per-side text override
+private val overrideJson = Json { ignoreUnknownKeys = true }
+
+private fun encodeTextOverride(override: CardTextOverride?): String? =
+    override?.takeUnless { it.isEmpty() }?.let { overrideJson.encodeToString(CardTextOverride.serializer(), it) }
+
+private fun decodeTextOverride(stored: String?): CardTextOverride? =
+    stored
+        ?.let { runCatching { overrideJson.decodeFromString(CardTextOverride.serializer(), it) }.getOrNull() }
+        ?.takeUnless { it.isEmpty() }
+
 private fun DbDeck.toModel() = Deck(
     id = id,
     name = name,
@@ -406,6 +431,8 @@ private fun DbDeck.toModel() = Deck(
     isHierarchical = isHierarchical != 0L,
     isSrs = isSrs != 0L,
     newCardsPerDay = newCardsPerDay.toInt(),
+    frontTextOverride = decodeTextOverride(frontTextStyle),
+    backTextOverride = decodeTextOverride(backTextStyle),
 )
 
 private fun DbDeckLevel.toModel() = DeckLevel(
@@ -447,6 +474,8 @@ private fun SelectDeckSummaries.toSummary() = DeckSummary(
         isHierarchical = isHierarchical != 0L,
         isSrs = isSrs != 0L,
         newCardsPerDay = newCardsPerDay.toInt(),
+        frontTextOverride = decodeTextOverride(frontTextStyle),
+        backTextOverride = decodeTextOverride(backTextStyle),
     ),
     cardCount = cardCount.toInt(),
     tagCount = tagCount.toInt(),

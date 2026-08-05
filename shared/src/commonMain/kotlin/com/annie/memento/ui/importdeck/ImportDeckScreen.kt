@@ -70,6 +70,7 @@ import com.annie.memento.ui.navigation.PlatformBackHandler
 import com.annie.memento.ui.navigation.Screen
 import com.annie.memento.ui.richtext.RichText
 import com.annie.memento.ui.theme.ChipShape
+import com.annie.memento.ui.theme.withCardFont
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
@@ -482,7 +483,7 @@ private fun NoteTypeCard(
                                 RichText(
                                     markup = sample.text,
                                     rich = sample.isRich,
-                                    style = MaterialTheme.typography.bodySmall,
+                                    style = MaterialTheme.typography.bodySmall.withCardFont(main = false),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,

@@ -43,7 +43,10 @@ import androidx.compose.ui.unit.dp
 import com.annie.memento.di.LocalAppGraph
 import com.annie.memento.di.LocalAppSettings
 import com.annie.memento.model.Card
+import com.annie.memento.model.CardFont
 import com.annie.memento.model.CardSide
+import com.annie.memento.model.CardTextOverride
+import com.annie.memento.model.cardTextFor
 import com.annie.memento.platform.ioDispatcher
 import com.annie.memento.ui.components.AudioPlayButton
 import com.annie.memento.ui.components.MementoPanel
@@ -55,6 +58,7 @@ import com.annie.memento.ui.richtext.RichText
 import com.annie.memento.ui.theme.CardPanelShape
 import com.annie.memento.ui.theme.InsetShape
 import com.annie.memento.ui.theme.scaledBy
+import com.annie.memento.ui.theme.withCardFont
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -151,6 +155,8 @@ fun FlipCard(
     backName: String,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    frontTextOverride: CardTextOverride? = null,
+    backTextOverride: CardTextOverride? = null,
 ) {
     val rotation by animateFloatAsState(
         targetValue = if (flipped) 180f else 0f,
@@ -179,11 +185,11 @@ fun FlipCard(
             },
     ) {
         if (rotation <= 90f) {
-            CardFace(sideName = frontName, side = frontSide)
+            CardFace(sideName = frontName, side = frontSide, textOverride = frontTextOverride)
         } else {
             //rotate back, so content not mirrored
             Box(Modifier.fillMaxSize().graphicsLayer { rotationY = 180f }) {
-                CardFace(sideName = backName, side = backSide)
+                CardFace(sideName = backName, side = backSide, textOverride = backTextOverride)
             }
         }
         if (flash.value > 0f) {
@@ -195,8 +201,8 @@ fun FlipCard(
 private const val FLASH_ALPHA = 0.20f
 
 @Composable
-private fun CardFace(sideName: String, side: CardSide) {
-    val settings = LocalAppSettings.current
+private fun CardFace(sideName: String, side: CardSide, textOverride: CardTextOverride?) {
+    val text = LocalAppSettings.current.cardTextFor(textOverride)
     Surface(
         modifier = Modifier.fillMaxSize().cornerBrackets(MaterialTheme.colorScheme.primary, topStart = false, bottomEnd = false),
         shape = CardPanelShape,
@@ -217,7 +223,7 @@ private fun CardFace(sideName: String, side: CardSide) {
                     RichText(
                         markup = side.text,
                         rich = side.isRichText,
-                        style = MaterialTheme.typography.headlineMedium.scaledBy(settings.mainTextScale),
+                        style = MaterialTheme.typography.headlineMedium.scaledBy(text.mainTextScale).withCardFont(text.font, text.fontWeight),
                         textAlign = TextAlign.Center,
                     )
                     if (side.examples.isNotEmpty()) {
@@ -226,7 +232,8 @@ private fun CardFace(sideName: String, side: CardSide) {
                             text = side.examples.joinToString("\n") { "• $it" },
                             textColor = MaterialTheme.colorScheme.onSurface,
                             rich = side.isRichText,
-                            textScale = settings.examplesScale,
+                            textScale = text.examplesScale,
+                            font = text.font,
                         )
                     }
                     side.notes?.takeIf { it.isNotBlank() }?.let { notes ->
@@ -235,7 +242,8 @@ private fun CardFace(sideName: String, side: CardSide) {
                             text = notes,
                             textColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             rich = side.isRichText,
-                            textScale = settings.notesScale,
+                            textScale = text.notesScale,
+                            font = text.font,
                         )
                     }
                     if (side.audioPaths.isNotEmpty()) {
@@ -263,6 +271,7 @@ private fun ExpandableTextSection(
     collapsedMaxLines: Int = 3,
     rich: Boolean = false,
     textScale: Float = 1f,
+    font: CardFont = CardFont.SYSTEM,
 ) {
     var expanded by remember(text) { mutableStateOf(false) }
     var overflows by remember(text) { mutableStateOf(false) }
@@ -277,7 +286,7 @@ private fun ExpandableTextSection(
             RichText(
                 markup = text,
                 rich = rich,
-                style = MaterialTheme.typography.bodyMedium.scaledBy(textScale),
+                style = MaterialTheme.typography.bodyMedium.scaledBy(textScale).withCardFont(font, null),
                 color = textColor,
                 maxLines = if (expanded) Int.MAX_VALUE else collapsedMaxLines,
                 overflow = TextOverflow.Ellipsis,

@@ -1,0 +1,3 @@
+-- v3 -> v4: font overrides per decks
+ALTER TABLE deck ADD COLUMN frontTextStyle TEXT;
+ALTER TABLE deck ADD COLUMN backTextStyle TEXT;

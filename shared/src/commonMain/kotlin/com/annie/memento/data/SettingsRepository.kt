@@ -4,6 +4,8 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.annie.memento.db.MementoDatabase
 import com.annie.memento.model.AppSettings
+import com.annie.memento.model.CardFont
+import com.annie.memento.model.CardFontWeight
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -31,6 +33,10 @@ class SettingsRepository(
 
     suspend fun setNotesScale(scale: Float) = put(KEY_NOTES_SCALE, scale.toString())
 
+    suspend fun setCardFont(font: CardFont) = put(KEY_CARD_FONT, font.name)
+
+    suspend fun setCardFontWeight(weight: CardFontWeight) = put(KEY_CARD_FONT_WEIGHT, weight.name)
+
     private suspend fun put(key: String, value: String) = withContext(dispatcher) {
         q.upsert(key, value)
     }
@@ -40,6 +46,8 @@ private const val KEY_AUDIO_AUTOPLAY = "audio_autoplay"
 private const val KEY_MAIN_TEXT_SCALE = "main_text_scale"
 private const val KEY_EXAMPLES_SCALE = "examples_scale"
 private const val KEY_NOTES_SCALE = "notes_scale"
+private const val KEY_CARD_FONT = "card_font"
+private const val KEY_CARD_FONT_WEIGHT = "card_font_weight"
 
 //default fallback
 private fun Map<String, String>.toAppSettings(): AppSettings {
@@ -49,5 +57,8 @@ private fun Map<String, String>.toAppSettings(): AppSettings {
         mainTextScale = this[KEY_MAIN_TEXT_SCALE]?.toFloatOrNull() ?: defaults.mainTextScale,
         examplesScale = this[KEY_EXAMPLES_SCALE]?.toFloatOrNull() ?: defaults.examplesScale,
         notesScale = this[KEY_NOTES_SCALE]?.toFloatOrNull() ?: defaults.notesScale,
+        cardFont = this[KEY_CARD_FONT]?.let { v -> CardFont.entries.firstOrNull { it.name == v } } ?: defaults.cardFont,
+        cardFontWeight = this[KEY_CARD_FONT_WEIGHT]?.let { v -> CardFontWeight.entries.firstOrNull { it.name == v } }
+            ?: defaults.cardFontWeight,
     )
 }

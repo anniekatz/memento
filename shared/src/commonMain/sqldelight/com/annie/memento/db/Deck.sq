@@ -7,12 +7,14 @@ CREATE TABLE deck (
     description TEXT,
     photoPaths TEXT,
     isSrs INTEGER NOT NULL DEFAULT 0,
-    newCardsPerDay INTEGER NOT NULL DEFAULT 15
+    newCardsPerDay INTEGER NOT NULL DEFAULT 15,
+    frontTextStyle TEXT,
+    backTextStyle TEXT
 );
 
 insertDeck:
-INSERT INTO deck(name, frontName, backName, isHierarchical, description, photoPaths, isSrs, newCardsPerDay)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO deck(name, frontName, backName, isHierarchical, description, photoPaths, isSrs, newCardsPerDay, frontTextStyle, backTextStyle)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 lastInsertRowId:
 SELECT last_insert_rowid();
@@ -33,6 +35,8 @@ SELECT
     deck.photoPaths,
     deck.isSrs,
     deck.newCardsPerDay,
+    deck.frontTextStyle,
+    deck.backTextStyle,
     (SELECT COUNT(*) FROM card WHERE card.deckId = deck.id) AS cardCount,
     (SELECT COUNT(*) FROM tag WHERE tag.deckId = deck.id) AS tagCount,
     (SELECT COUNT(*) FROM deckLevel WHERE deckLevel.deckId = deck.id) AS levelCount,
@@ -44,7 +48,7 @@ ORDER BY deck.id DESC;
 
 updateDeck:
 UPDATE deck
-SET name = ?, frontName = ?, backName = ?, isHierarchical = ?, description = ?, photoPaths = ?, isSrs = ?, newCardsPerDay = ?
+SET name = ?, frontName = ?, backName = ?, isHierarchical = ?, description = ?, photoPaths = ?, isSrs = ?, newCardsPerDay = ?, frontTextStyle = ?, backTextStyle = ?
 WHERE id = ?;
 
 deleteDeck:

@@ -58,8 +58,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.annie.memento.data.mementoZip.MementoZipExporter
 import com.annie.memento.di.LocalAppGraph
+import com.annie.memento.di.LocalAppSettings
 import com.annie.memento.model.Card
 import com.annie.memento.model.CardSide
+import com.annie.memento.model.cardTextFor
 import com.annie.memento.model.DeckDetails
 import com.annie.memento.model.MAX_MASTERY
 import com.annie.memento.model.SrsDeckStatus
@@ -92,6 +94,7 @@ import com.annie.memento.ui.theme.InsetShape
 import com.annie.memento.ui.theme.PanelShape
 import com.annie.memento.ui.theme.TileShape
 import com.annie.memento.ui.theme.toColor
+import com.annie.memento.ui.theme.withCardFont
 import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -687,6 +690,10 @@ private fun CardCell(
 ) {
     val level = details.levelById(card.levelId)
     val tags = details.tagsByIds(card.tagIds)
+    val appSettings = LocalAppSettings.current
+    val frontFont = appSettings.cardTextFor(details.deck.frontTextOverride).font
+    val backFont = appSettings.cardTextFor(details.deck.backTextOverride).font
+
     // level/tags just become color dots for view
     val dotColors = buildList<Color> {
         if (level != null) add(level.color?.toColor() ?: NeutralChipColor)
@@ -764,14 +771,14 @@ private fun CardCell(
             ) {
                 Text(
                     if (card.front.isRichText) richTextToPlain(card.front.text) else card.front.text,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleSmall.withCardFont(frontFont, null),
                     textAlign = TextAlign.Center,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     if (card.back.isRichText) richTextToPlain(card.back.text) else card.back.text,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.withCardFont(backFont, null),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     maxLines = 2,

@@ -35,10 +35,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import com.annie.memento.di.LocalAppGraph
+import com.annie.memento.di.LocalAppSettings
+import com.annie.memento.model.CardTextOverride
 import com.annie.memento.model.DEFAULT_NEW_CARDS_PER_DAY
 import com.annie.memento.model.LevelDraft
 import com.annie.memento.model.MediaInput
 import com.annie.memento.model.TagDraft
+import com.annie.memento.model.asOverride
+import com.annie.memento.model.cardTextFor
+import com.annie.memento.ui.components.CardTextControls
 import com.annie.memento.ui.components.ColorPickerRow
 import com.annie.memento.ui.components.MediaField
 import com.annie.memento.ui.components.MementoScaffold
@@ -73,6 +78,8 @@ fun DeckEditorScreen(navigator: Navigator, deckId: Long?) {
     var newPerDayText by remember { mutableStateOf(DEFAULT_NEW_CARDS_PER_DAY.toString()) }
     val levels = remember { mutableStateListOf<EditableLevel>() }
     val tags = remember { mutableStateListOf<EditableTag>() }
+    var frontTextStyle by remember { mutableStateOf<CardTextOverride?>(null) }
+    var backTextStyle by remember { mutableStateOf<CardTextOverride?>(null) }
     var initialized by remember { mutableStateOf(!isEditing) }
     var error by remember { mutableStateOf<String?>(null) }
     var saving by remember { mutableStateOf(false) }
@@ -93,6 +100,8 @@ fun DeckEditorScreen(navigator: Navigator, deckId: Long?) {
                 levels.addAll(details.levels.sortedBy { it.position }.map { EditableLevel(it.id, it.name ?: "", it.color) })
                 tags.clear()
                 tags.addAll(details.tags.map { EditableTag(it.id, it.name, it.color) })
+                frontTextStyle = details.deck.frontTextOverride
+                backTextStyle = details.deck.backTextOverride
             }
             initialized = true
         }
@@ -125,11 +134,13 @@ fun DeckEditorScreen(navigator: Navigator, deckId: Long?) {
                 repo.createDeck(
                     name.trim(), descEffective, photoInput, frontEffective, backEffective, hierarchical, levelDrafts, tagDrafts,
                     isSrs = srs, newCardsPerDay = newPerDay,
+                    frontTextOverride = frontTextStyle, backTextOverride = backTextStyle,
                 )
             } else {
                 repo.updateDeck(
                     deckId, name.trim(), descEffective, photoInput, frontEffective, backEffective, hierarchical, levelDrafts, tagDrafts,
                     isSrs = srs, newCardsPerDay = newPerDay,
+                    frontTextOverride = frontTextStyle, backTextOverride = backTextStyle,
                 )
             }
             navigator.pop()
@@ -220,6 +231,27 @@ fun DeckEditorScreen(navigator: Navigator, deckId: Long?) {
                         placeholder = { Text("Back") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+
+            UnclippedSectionCard(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    SectionTitle("Card text")
+                    Text(
+                        "Give either side its own font, boldness, or sizes in this deck. A side without custom settings follows your global settings.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    SideTextStyleEditor(
+                        sideName = front.trim().ifBlank { "Front" },
+                        current = frontTextStyle,
+                        onChange = { frontTextStyle = it },
+                    )
+                    SideTextStyleEditor(
+                        sideName = back.trim().ifBlank { "Back" },
+                        current = backTextStyle,
+                        onChange = { backTextStyle = it },
                     )
                 }
             }
@@ -333,6 +365,48 @@ private fun UnclippedSectionCard(
             .background(MaterialTheme.colorScheme.surfaceContainer, PanelShape),
     ) {
         content()
+    }
+}
+
+//each card side text override (follows global by default)
+@Composable
+private fun SideTextStyleEditor(
+    sideName: String,
+    current: CardTextOverride?,
+    onChange: (CardTextOverride?) -> Unit,
+) {
+    val globals = LocalAppSettings.current
+    Surface(
+        shape = InsetShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        sideName.uppercase(),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        if (current == null) "Follows global settings" else "Custom settings",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = current != null,
+                    onCheckedChange = { on -> onChange(if (on) globals.cardTextFor().asOverride() else null) },
+                )
+            }
+            if (current != null) {
+                CardTextControls(
+                    value = globals.cardTextFor(current),
+                    onChange = { onChange(it.asOverride()) },
+                )
+            }
+        }
     }
 }
 
