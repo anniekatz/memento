@@ -21,9 +21,7 @@ val MementoCyan = Color(0xFF38C6E6)
 
 val MementoRed = Color(0xFFFF453A)
 
-val MementoOrange = Color(0xFFFF8A1E) 
-
-val MementoHazard = Color(0xFFF5B81E)
+val MementoYellow = Color(0xFFF5B81E)
 
 private val Void = Color(0xFF07080A) // app bg
 private val Surface = Color(0xFF0D0F13) // base panels

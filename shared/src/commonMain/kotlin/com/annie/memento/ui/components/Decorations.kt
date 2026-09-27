@@ -39,7 +39,7 @@ import com.annie.memento.ui.theme.ButtonShape
 import com.annie.memento.ui.theme.ChipShape
 import com.annie.memento.ui.theme.InsetShape
 import com.annie.memento.ui.theme.MementoGridLine
-import com.annie.memento.ui.theme.MementoHazard
+import com.annie.memento.ui.theme.MementoYellow
 import com.annie.memento.ui.theme.PanelShape
 
 // background grid
@@ -119,7 +119,7 @@ fun HazardStripes(
     modifier: Modifier = Modifier,
     height: Dp = 6.dp,
     stripe: Dp = 12.dp,
-    color: Color = MementoHazard,
+    color: Color = MementoYellow,
     gap: Color = Color(0xFF15161A),
 ) {
     Canvas(modifier.fillMaxWidth().height(height).clipToBounds()) {
