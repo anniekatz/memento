@@ -12,4 +12,5 @@ class AppGraph(
     val audioPlayer: AudioPlayer,
     // scratch space deck exports
     val cacheDirPath: String,
+    val appVersion: String,
 )

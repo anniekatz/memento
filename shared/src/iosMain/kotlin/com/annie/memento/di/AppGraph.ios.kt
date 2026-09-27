@@ -8,6 +8,7 @@ import com.annie.memento.db.MementoDatabase
 import com.annie.memento.platform.IosAudioPlayer
 import com.annie.memento.platform.IosMediaStorage
 import com.annie.memento.platform.ioDispatcher
+import platform.Foundation.NSBundle
 import platform.Foundation.NSTemporaryDirectory
 
 private val graph: AppGraph by lazy { build() }
@@ -32,5 +33,6 @@ private fun build(): AppGraph {
         mediaStorage = media,
         audioPlayer = IosAudioPlayer(),
         cacheDirPath = NSTemporaryDirectory().trimEnd('/'),
+        appVersion = NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String ?: "",
     )
 }

@@ -228,6 +228,7 @@ fun MementoButton(
     leading: String? = null,
     container: Color = MaterialTheme.colorScheme.primary,
     onContainer: Color = MaterialTheme.colorScheme.onPrimary,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
 ) {
     Button(
         onClick = onClick,
@@ -240,7 +241,7 @@ fun MementoButton(
             disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
         ),
-        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
+        contentPadding = contentPadding,
     ) {
         MementoButtonContent(text, leading)
     }

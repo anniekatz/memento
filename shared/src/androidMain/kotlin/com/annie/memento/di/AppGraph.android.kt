@@ -41,5 +41,6 @@ private fun build(appContext: Context): AppGraph {
         mediaStorage = media,
         audioPlayer = AndroidAudioPlayer(),
         cacheDirPath = appContext.cacheDir.absolutePath,
+        appVersion = appContext.packageManager.getPackageInfo(appContext.packageName, 0).versionName ?: "",
     )
 }

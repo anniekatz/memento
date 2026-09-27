@@ -513,9 +513,19 @@ private fun DeckHeader(
                     modifier = Modifier.weight(1f).height(54.dp),
                 )
                 MementoButton(
-                    text = "Review - ${srsStatus.dueToday}",
+                    text = if (srsStatus.dueToday > 0) "Review - ${srsStatus.dueToday}" else "Review",
                     onClick = onSrsReview,
-                    enabled = srsStatus.dueToday > 0,
+                    enabled = srsStatus.dueToday > 0 || srsStatus.mastered > 0,
+                    container = if (srsStatus.dueToday > 0) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHighest
+                    },
+                    onContainer = if (srsStatus.dueToday > 0) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                     leading = "▶",
                     modifier = Modifier.weight(1f).height(54.dp),
                 )

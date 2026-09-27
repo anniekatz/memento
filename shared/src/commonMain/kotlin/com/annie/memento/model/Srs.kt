@@ -6,17 +6,27 @@ package com.annie.memento.model
 const val MAX_MASTERY = 15
 const val DEFAULT_NEW_CARDS_PER_DAY = 15
 
-enum class ReviewGrade { Red, Yellow, Green }
+enum class ReviewGrade { Red, Orange, Yellow, Green }
+
+// review: due today or mastered
+enum class ReviewMode { Due, Mastered }
 
 data class SrsUpdate(val mastery: Int, val nextReviewDay: Long?)
 
+// mastery == days until next review
 fun srsAfterGrade(currentMastery: Int, grade: ReviewGrade, today: Long): SrsUpdate = when (grade) {
-    ReviewGrade.Red -> SrsUpdate(0, today) // stays due
-    ReviewGrade.Yellow -> SrsUpdate(0, today + 1) //review tomorrow
-    ReviewGrade.Green -> { //add to mastery count - mastery == 15 greens in a row
-        val mastery = (currentMastery + 1).coerceAtMost(MAX_MASTERY)
-        SrsUpdate(mastery, if (mastery >= MAX_MASTERY) null else today + mastery)
-    }
+    ReviewGrade.Red -> SrsUpdate(0, today) // wrong: mastery set 0, back in review deck
+    ReviewGrade.Orange -> srsForMastery(currentMastery - 2, today) // hard: -2 mastery
+    ReviewGrade.Yellow -> srsForMastery(currentMastery, today) // good: mastery same
+    ReviewGrade.Green -> srsForMastery(currentMastery + 1, today) // easy: +1 mastery
+}
+
+// grading during a mastered review
+fun srsAfterMasteredGrade(grade: ReviewGrade, today: Long): SrsUpdate? = when (grade) {
+    ReviewGrade.Red -> srsForMastery(1, today) // wrong; mastery reset to 1
+    ReviewGrade.Orange -> srsForMastery(3, today) // hard; mastery reset to 3
+    ReviewGrade.Yellow -> srsForMastery(7, today) // good; mastery reset to 7
+    ReviewGrade.Green -> null // easy: still mastered
 }
 
 fun srsForMastery(mastery: Int, today: Long): SrsUpdate {

@@ -40,7 +40,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
     val settings = LocalAppSettings.current
-    val repo = LocalAppGraph.current.settingsRepository
+    val graph = LocalAppGraph.current
+    val repo = graph.settingsRepository
     val scope = rememberCoroutineScope()
 
     MementoScaffold(
@@ -48,26 +49,35 @@ fun SettingsScreen(onBack: () -> Unit) {
         overline = "MEMENTO · CONFIG",
         onBack = onBack,
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            AudioAutoplaySetting(
-                enabled = settings.audioAutoplay,
-                onChange = { scope.launch { repo.setAudioAutoplay(it) } },
-            )
-            CardTextSetting(
-                current = settings.cardTextFor(),
-                onMainChange = { scope.launch { repo.setMainTextScale(it) } },
-                onExamplesChange = { scope.launch { repo.setExamplesScale(it) } },
-                onNotesChange = { scope.launch { repo.setNotesScale(it) } },
-                onFontChange = { scope.launch { repo.setCardFont(it) } },
-                onWeightChange = { scope.launch { repo.setCardFontWeight(it) } },
-            )
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                AudioAutoplaySetting(
+                    enabled = settings.audioAutoplay,
+                    onChange = { scope.launch { repo.setAudioAutoplay(it) } },
+                )
+                CardTextSetting(
+                    current = settings.cardTextFor(),
+                    onMainChange = { scope.launch { repo.setMainTextScale(it) } },
+                    onExamplesChange = { scope.launch { repo.setExamplesScale(it) } },
+                    onNotesChange = { scope.launch { repo.setNotesScale(it) } },
+                    onFontChange = { scope.launch { repo.setCardFont(it) } },
+                    onWeightChange = { scope.launch { repo.setCardFontWeight(it) } },
+                )
+            }
+            if (graph.appVersion.isNotBlank()) {
+                Text(
+                    "v${graph.appVersion}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.End).padding(horizontal = 16.dp, vertical = 10.dp),
+                )
+            }
         }
     }
 }

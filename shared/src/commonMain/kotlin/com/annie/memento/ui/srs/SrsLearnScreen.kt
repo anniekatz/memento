@@ -374,15 +374,6 @@ private fun DayCompletePanel(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                if (reviewableToday > 0) {
-                    Text(
-                        "Same-day review is an ungraded flip-through - red/yellow/green starts tomorrow.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
                 MementoButton(
                     text = "Review today's cards - $reviewableToday",
                     onClick = onReview,

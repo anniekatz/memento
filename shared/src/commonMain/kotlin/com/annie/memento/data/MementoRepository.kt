@@ -22,6 +22,7 @@ import com.annie.memento.model.SideInput
 import com.annie.memento.model.Tag
 import com.annie.memento.model.TagDraft
 import com.annie.memento.model.srsAfterGrade
+import com.annie.memento.model.srsAfterMasteredGrade
 import com.annie.memento.model.srsForMastery
 import com.annie.memento.platform.MediaStorage
 import kotlinx.coroutines.CoroutineDispatcher
@@ -335,6 +336,14 @@ class MementoRepository(
             val update = srsAfterGrade(currentMastery, grade, today)
             cardQ.setSrsState(today, update.mastery.toLong(), update.nextReviewDay, cardId)
         }
+
+    // mastered review grading
+    suspend fun gradeMasteredCard(cardId: Long, grade: ReviewGrade, today: Long) {
+        val update = srsAfterMasteredGrade(grade, today) ?: return
+        withContext(dispatcher) {
+            cardQ.setSrsState(today, update.mastery.toLong(), update.nextReviewDay, cardId)
+        }
+    }
 
     // bulk card writes
     suspend fun bulkEditCards(
