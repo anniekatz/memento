@@ -59,7 +59,7 @@ import com.annie.memento.ui.review.SideOption
 import com.annie.memento.ui.review.StartSidePicker
 import com.annie.memento.ui.theme.MementoGreen
 import com.annie.memento.ui.theme.MementoHazard
-import com.annie.memento.ui.theme.MementoOrange
+import com.annie.memento.ui.theme.MementoAmberBright
 import com.annie.memento.ui.theme.MementoRed
 import kotlin.random.Random
 import kotlinx.coroutines.launch
@@ -154,7 +154,7 @@ fun SrsReviewScreen(navigator: Navigator, deckId: Long) {
                                 }
                             }
                             GradeLegendRow(MementoRed, "Red: wrong")
-                            GradeLegendRow(MementoOrange, "Orange: hard")
+                            GradeLegendRow(MementoAmberBright, "Orange: hard")
                             GradeLegendRow(MementoHazard, "Yellow: good")
                             GradeLegendRow(MementoGreen, "Green: easy")
                         }
@@ -293,7 +293,7 @@ fun SrsReviewScreen(navigator: Navigator, deckId: Long) {
                         MementoButton(
                             text = "Hard",
                             onClick = { grade(ReviewGrade.Orange) },
-                            container = MementoOrange,
+                            container = MementoAmberBright,
                             onContainer = Color(0xFF241000),
                             contentPadding = gradePadding,
                             modifier = Modifier.weight(1f).height(52.dp),
